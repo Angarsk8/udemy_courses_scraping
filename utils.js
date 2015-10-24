@@ -9,3 +9,4 @@ function getUrls() {
 
 var arrayOfPaths = [];
 arrayOfPaths = arrayOfPaths.concat(getUrls());
+arrayOfPaths = JSON.stringify(arrayOfPaths).replace(/(\r\n|\n|\r|\[|\])/gm,"");
