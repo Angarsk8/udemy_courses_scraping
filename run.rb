@@ -40,8 +40,9 @@ end
 
 def build_course_information (doc, url)
 	source = "Udemy"
-	category = doc.css("span.cats").css("a").first.text.strip
-	subcategory = doc.css("span.cats").css("a").last.text.strip
+	_category = doc.css("span.cats").css("a")
+	category = _category.empty? ? "Unknown" : _category.first.text.strip
+	subcategory = _category.empty? ? "Unknown" : _category.last.text.strip
 	topic = doc.at_css("h1.course-title").text.strip
 	_enrolled = doc.css(".enrolled").at_css("span.rate-count").text.strip.scan(/\d+/).map(&:to_i)
 	rating = _enrolled.first
