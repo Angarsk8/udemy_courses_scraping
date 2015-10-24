@@ -77,7 +77,7 @@ end
 
 def fetch_data_from_udemy(base_url, courses_paths)
 	bar = ProgressBar.create(
-		:format => '%a |%b>>%i| %p%% %t',
+		:format => '%a |%b>>%i| %P%% %t',
 		:total => courses_paths.length
 	)
 	return courses_paths.map_with_index do |path, i|
