@@ -2,6 +2,7 @@ require 'ruby-progressbar'
 require 'open-uri'
 require 'nokogiri'
 require 'json'
+require 'csv'
 require('./categories')
 
 include Categories
@@ -27,27 +28,6 @@ def get_contact_link(object, query)
 		return "none"
 	end
 end	
-
-def get_authors_from_file (file_name)
-	if !File.zero?(file_name)
-		courses_hash = JSON.parse(File.read(file_name))
-		authors_hash = []
-		courses_hash.each do |course|
-			course["authors"].each do |author|
-				authors_hash << author
-			end 
-		end
-		JSON.pretty_generate(authors_hash.uniq)
-	else
-		raise StandardError, "The file #{file_name} is empty"
-	end
-end
-
-def write_text_to_file (file_name, mode = "w", data)
-	output_file = File.new(file_name, mode)
-	output_file.puts data
-	output_file.close
-end
 
 def build_course_information (doc, url)
 	source = "Udemy"
@@ -104,12 +84,73 @@ def fetch_data_from_udemy(base_url, courses_paths)
 	)
 end
 
+def write_text_to_file (file_name, mode = "w", data)
+	output_file = File.new(file_name, mode)
+	output_file.puts data
+	output_file.close
+end
+
+def get_authors_from_file (file_name)
+	if !File.zero?(file_name)
+		courses_hash = JSON.parse(File.read(file_name))
+		authors_hash = []
+		courses_hash.each do |course|
+			course["authors"].each do |author|
+				authors_hash << author
+			end 
+		end
+		JSON.pretty_generate(authors_hash.uniq)
+	else
+		raise StandardError, "The file #{file_name} is empty"
+	end
+end
+
+def build_courses_csv(file_name, mode="w", courses)
+	CSV.open(file_name, mode, {:col_sep => "; "}) do |csv|
+		csv << [
+			"source", "url","category", "subcategory",
+			"topic", "name", "twitter", "facebook",
+			"googleplus", "linkedin", "youtube", "website"
+		]
+		JSON.parse(courses).each do |course|
+			course["authors"].each do |author|
+				csv << [
+					course["source"], course["url"], course["category"],
+					course["subcategory"], course["topic"], author["name"],
+					author["twitter"], author["facebook"], author["googleplus"],
+					author["linkedin"], author["youtube"], author["website"]
+				]
+			end
+		end
+	end
+end
+
+def build_authors_csv(file_name, mode = "w", authors)
+	CSV.open(file_name, mode, {:col_sep => "; "}) do |csv|
+		csv << [
+			"name", "twitter","facebook",
+			"googleplus", "linkedin", "youtube",
+			"website"
+		]
+		JSON.parse(authors).each do |author|
+			csv << [
+				author["name"], author["twitter"], author["facebook"],
+				author["googleplus"], author["linkedin"], author["youtube"],
+				author["website"]
+			]
+		end
+	end
+end
+
 def main 
 	begin 
-		data = fetch_data_from_udemy(BASE_URL, COURSES_PATHS) 
-		write_text_to_file("results.json", "w", data)
-	    authors = get_authors_from_file("results.json")
-	    write_text_to_file("authors.json", "w", authors)		
+		_ = "output"
+		courses = fetch_data_from_udemy(BASE_URL, COURSES_PATHS) 
+		write_text_to_file("#{_}/courses.json", "w", courses)
+		build_courses_csv("#{_}/courses.csv", "w", courses)
+	    authors = get_authors_from_file("#{_}/courses.json")
+	    write_text_to_file("#{_}/authors.json", "w", authors)		
+	    build_authors_csv("#{_}/authors.csv", "w", authors)
 		puts "The process has finished succesfully"
 	rescue Exception => e
 		puts "An error has ocurred: #{e.message}"

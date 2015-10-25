@@ -1,2 +1,4 @@
-*results.json
-*authors.json
+output/*.json
+output/*.csv
+.DS_Store
+.DS_Store?
