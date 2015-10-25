@@ -64,7 +64,7 @@ def fetch_data_from_udemy(base_url, courses_paths)
 	)
 	return JSON.pretty_generate(
 		courses_paths.map do |path|
-			composed_url = "#{BASE_URL}#{path}"
+			composed_url = "#{base_url}#{path}"
 			html = open(composed_url)
 			doc = Nokogiri::HTML(html)
 			bar.log "Fetching data from #{composed_url}"
