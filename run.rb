@@ -7,17 +7,6 @@ require('./categories')
 
 include Categories
 
-module Enumerable
-	def map_with_index(&block)
-		i = 0
-		self.map do |val|
-			val = block.call(val, i)
-			i += 1
-			val
-		end
-	end
-end
-
 def get_contact_link(object, query)
 	selector = "i[class='icon-#{query}']"
 	if object.at_css(selector)
@@ -144,13 +133,12 @@ end
 
 def main 
 	begin 
-		_ = "output"
 		courses = fetch_data_from_udemy(BASE_URL, COURSES_PATHS) 
-		write_text_to_file("#{_}/courses.json", "w", courses)
-		build_courses_csv("#{_}/courses.csv", "w", courses)
-	    authors = get_authors_from_file("#{_}/courses.json")
-	    write_text_to_file("#{_}/authors.json", "w", authors)		
-	    build_authors_csv("#{_}/authors.csv", "w", authors)
+		write_text_to_file("output/courses.json", "w", courses)
+		build_courses_csv("output/courses.csv", "w", courses)
+	    authors = get_authors_from_file("output/courses.json")
+	    write_text_to_file("output/authors.json", "w", authors)		
+	    build_authors_csv("output/authors.csv", "w", authors)
 		puts "The process has finished succesfully"
 	rescue Exception => e
 		puts "An error has ocurred: #{e.message}"
