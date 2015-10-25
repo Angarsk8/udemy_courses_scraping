@@ -28,13 +28,24 @@ def get_contact_link(object, query)
 	end
 end	
 
+def get_authors_from_file (file_name)
+	if !File.zero?(file_name)
+		courses_hash = JSON.parse(File.read(file_name))
+		authors_hash = []
+		courses_hash.each do |course|
+			course["authors"].each do |author|
+				authors_hash << author
+			end 
+		end
+		JSON.pretty_generate(authors_hash.uniq)
+	else
+		raise StandardError, "The file #{file_name} is empty"
+	end
+end
+
 def write_text_to_file (file_name, mode = "w", data)
 	output_file = File.new(file_name, mode)
-	output_file.puts "[\n"
-	data.each_with_index do |course_information, i|
-		output_file.puts (i + 1) == data.length ? course_information : "#{course_information},"
-	end
-	output_file.puts "]"
+	output_file.puts data
 	output_file.close
 end
 
@@ -62,7 +73,7 @@ def build_course_information (doc, url)
 			website: get_contact_link(contact_list, 'globe')
 		}
 	end
-	return JSON.pretty_generate({
+	return {
 		source: source,
 		url: url,
 		category: category,
@@ -73,7 +84,7 @@ def build_course_information (doc, url)
 		rating: rating,
 		average_rating: average_rating,
 		price: price
-    })
+    }
 end
 
 def fetch_data_from_udemy(base_url, courses_paths)
@@ -81,24 +92,28 @@ def fetch_data_from_udemy(base_url, courses_paths)
 		:format => '%a |%b>>%i| %P%% %t',
 		:total => courses_paths.length
 	)
-	return courses_paths.map_with_index do |path, i|
-		composed_url = "#{BASE_URL}#{path}"
-		html = open(composed_url)
-		doc = Nokogiri::HTML(html)
-		bar.log "Fetching data from #{composed_url}"
-		bar.increment
-		build_course_information(doc, composed_url)
-	end
+	return JSON.pretty_generate(
+		courses_paths.map do |path|
+			composed_url = "#{BASE_URL}#{path}"
+			html = open(composed_url)
+			doc = Nokogiri::HTML(html)
+			bar.log "Fetching data from #{composed_url}"
+			bar.increment
+			build_course_information(doc, composed_url)
+		end
+	)
 end
 
 def main 
 	begin 
 		data = fetch_data_from_udemy(BASE_URL, COURSES_PATHS) 
 		write_text_to_file("results.json", "w", data)
+	    authors = get_authors_from_file("results.json")
+	    write_text_to_file("authors.json", "w", authors)		
 		puts "The process has finished succesfully"
 	rescue Exception => e
 		puts "An error has ocurred: #{e.message}"
 	end
 end
 
-main
+main		
