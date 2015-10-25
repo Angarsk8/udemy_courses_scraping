@@ -11,7 +11,8 @@ def get_contact_link(object, query)
 	selector = "i[class='icon-#{query}']"
 	if object.at_css(selector)
 		return object.at_css(selector)
-			.parent.attribute("href")
+			.parent
+			.attribute("href")
 			.value
 	else
 		return "none"
@@ -131,14 +132,30 @@ def build_authors_csv(file_name, mode = "w", authors)
 	end
 end
 
+def build_data_for_courses(dir_name, file_name, base_url, courses_paths)
+	courses = fetch_data_from_udemy(base_url, courses_paths)
+	write_text_to_file("#{dir_name}/#{file_name}.json", "w", courses)
+	build_courses_csv("#{dir_name}/#{file_name}.csv", "w", courses)
+end
+
+def build_data_for_authors(dir_name, src_file_name, file_name)
+    authors = get_authors_from_file("#{dir_name}/#{src_file_name}.json")
+    write_text_to_file("#{dir_name}/#{file_name}.json", "w", authors)		
+    build_authors_csv("#{dir_name}/#{file_name}.csv", "w", authors)
+end
+
+def create_output_folder(dir_name)
+	Dir.mkdir(dir_name) unless Dir.exist? dir_name
+end
+
 def main 
 	begin 
-		courses = fetch_data_from_udemy(BASE_URL, COURSES_PATHS) 
-		write_text_to_file("output/courses.json", "w", courses)
-		build_courses_csv("output/courses.csv", "w", courses)
-	    authors = get_authors_from_file("output/courses.json")
-	    write_text_to_file("output/authors.json", "w", authors)		
-	    build_authors_csv("output/authors.csv", "w", authors)
+		output_dir = "output"
+		base_url = BASE_URL
+		courses_paths = COURSES_PATHS
+		create_output_folder(output_dir)
+		build_data_for_courses(output_dir,"courses", base_url, courses_paths)
+		build_data_for_authors(output_dir, "courses", "authors")
 		puts "The process has finished succesfully"
 	rescue Exception => e
 		puts "An error has ocurred: #{e.message}"
